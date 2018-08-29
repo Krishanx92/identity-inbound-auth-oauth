@@ -75,7 +75,7 @@ public class OIDCDiscoveryEndpoint {
                 issuer = getTenantUrl(issuer, tenantDomain);
             }
 
-            if (getOidcDiscoveryEPUrl(tenantDomain).equals(issuer)) {
+            if (getOidcDiscoveryEPUrl(tenantDomain).endsWith(tokenEp)) {
 
                 return this.getResponse(request, tenantDomain);
             } else {
