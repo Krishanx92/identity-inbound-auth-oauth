@@ -223,9 +223,11 @@ public class JWTTokenGenerator implements AuthorizationContextTokenGenerator {
         claimsSet.setSubject(authzUser);
         claimsSet.setIssueTime(new Date(issuedTime));
         claimsSet.setExpirationTime(new Date(expireIn));
-        claimsSet.setClaim(API_GATEWAY_ID+"/subscriber",subscriber);
-        claimsSet.setClaim(API_GATEWAY_ID+"/applicationname",applicationName);
-        claimsSet.setClaim(API_GATEWAY_ID+"/enduser",authzUser);
+        // Nbf is set to the issue time of the JWT and not the issue time of the access token.
+        claimsSet.setNotBeforeTime(new Date(currentTime));
+        claimsSet.setClaim(API_GATEWAY_ID + "/subscriber", subscriber);
+        claimsSet.setClaim(API_GATEWAY_ID + "/applicationname", applicationName);
+        claimsSet.setClaim(API_GATEWAY_ID + "/enduser", authzUser);
         claimsSet.setJWTID(UUID.randomUUID().toString());
 
         if (JWT_TOKEN_TYPE.equals(messageContext.getRequestDTO().getAccessToken().getTokenType())) {
