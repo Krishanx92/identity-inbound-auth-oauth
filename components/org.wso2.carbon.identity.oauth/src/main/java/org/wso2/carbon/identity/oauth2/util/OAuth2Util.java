@@ -73,6 +73,7 @@ import org.wso2.carbon.identity.oauth.config.OAuthServerConfiguration;
 import org.wso2.carbon.identity.oauth.dao.OAuthAppDAO;
 import org.wso2.carbon.identity.oauth.dao.OAuthAppDO;
 import org.wso2.carbon.identity.oauth.dao.OAuthConsumerDAO;
+import org.wso2.carbon.identity.oauth.event.OAuthEventInterceptor;
 import org.wso2.carbon.identity.oauth.internal.OAuthComponentServiceHolder;
 import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.authz.OAuthAuthzReqMessageContext;
@@ -84,7 +85,6 @@ import org.wso2.carbon.identity.oauth2.model.ClientCredentialDO;
 import org.wso2.carbon.identity.oauth2.token.JWTTokenIssuer;
 import org.wso2.carbon.identity.oauth2.token.OAuthTokenReqMessageContext;
 import org.wso2.carbon.identity.oauth2.token.OauthTokenIssuer;
-import org.wso2.carbon.identity.oauth2.token.OauthTokenIssuerImpl;
 import org.wso2.carbon.identity.openidconnect.model.RequestedClaim;
 import org.wso2.carbon.registry.core.Registry;
 import org.wso2.carbon.registry.core.Resource;
@@ -2355,6 +2355,33 @@ public class OAuth2Util {
             }
         }
         return oauthTokenIssuer;
+    }
+
+    /**
+     * Publish event on token generation error.
+     *
+     * @param exception Exception occurred.
+     * @param params Additional parameters.
+     */
+    public static void triggerOnTokenExceptionListeners(Throwable exception, Map<String, Object> params) {
+
+        try {
+            OAuthEventInterceptor oAuthEventInterceptorProxy = OAuthComponentServiceHolder.getInstance()
+                    .getOAuthEventInterceptorProxy();
+
+            if (oAuthEventInterceptorProxy != null) {
+                try {
+                    oAuthEventInterceptorProxy.onTokenIssueException(exception, params);
+                } catch (IdentityOAuth2Exception e) {
+                    log.error("Error while invoking OAuthEventInterceptor for onTokenIssueException", e);
+                }
+            }
+        } catch (Throwable e) {
+            // Catching a throwable as we do no need to interrupt the code flow since these are logging purposes.
+            if (log.isDebugEnabled()) {
+                log.debug("Error occurred while executing oAuthEventInterceptorProxy for onTokenIssueException.", e);
+            }
+        }
     }
 }
 
