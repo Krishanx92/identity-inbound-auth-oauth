@@ -56,6 +56,7 @@ import org.wso2.carbon.identity.oauth2.OAuth2Service;
 import org.wso2.carbon.identity.oauth2.OAuth2TokenValidationService;
 import org.wso2.carbon.identity.oauth2.bean.OAuthClientAuthnContext;
 import org.wso2.carbon.identity.oauth2.dto.OAuth2ClientValidationResponseDTO;
+import org.wso2.carbon.identity.oauth2.dto.OAuth2IntrospectionResponseDTO;
 import org.wso2.carbon.identity.oauth2.model.OAuth2Parameters;
 import org.wso2.carbon.identity.oauth2.util.OAuth2Util;
 import org.wso2.carbon.identity.openidconnect.RequestObjectService;
@@ -716,5 +717,15 @@ public class EndpointUtil {
         if (isNotBlank(name) && isNotBlank(value)) {
             map.put(name, value);
         }
+    }
+
+    /**
+     * Extract information related to the token request and exception and publish the event to listeners.
+     *
+     * @param introspectionResponse
+     */
+    public static void triggerOnIntrospectionExceptionListeners(OAuth2IntrospectionResponseDTO introspectionResponse) {
+
+        OAuth2Util.triggerOnIntrospectionExceptionListeners(introspectionResponse);
     }
 }

@@ -34,6 +34,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import static org.wso2.carbon.identity.oauth.endpoint.util.EndpointUtil.triggerOnIntrospectionExceptionListeners;
+
 @Path("/introspect")
 @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
 @Produces(MediaType.APPLICATION_JSON)
@@ -68,6 +70,9 @@ public class OAuth2IntrospectionEndpoint {
         }
 
         if (StringUtils.isBlank(token)) {
+            introspectionResponse = new OAuth2IntrospectionResponseDTO();
+            introspectionResponse.setError("Invalid input");
+            triggerOnIntrospectionExceptionListeners(introspectionResponse);
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\": \"Invalid input\"}").build();
         }
 

@@ -79,6 +79,7 @@ import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.authz.OAuthAuthzReqMessageContext;
 import org.wso2.carbon.identity.oauth2.config.SpOAuth2ExpiryTimeConfiguration;
 import org.wso2.carbon.identity.oauth2.dao.OAuthTokenPersistenceFactory;
+import org.wso2.carbon.identity.oauth2.dto.OAuth2IntrospectionResponseDTO;
 import org.wso2.carbon.identity.oauth2.internal.OAuth2ServiceComponentHolder;
 import org.wso2.carbon.identity.oauth2.model.AccessTokenDO;
 import org.wso2.carbon.identity.oauth2.model.ClientCredentialDO;
@@ -2372,6 +2373,35 @@ public class OAuth2Util {
             if (oAuthEventInterceptorProxy != null) {
                 try {
                     oAuthEventInterceptorProxy.onTokenIssueException(exception, params);
+                } catch (IdentityOAuth2Exception e) {
+                    log.error("Error while invoking OAuthEventInterceptor for onTokenIssueException", e);
+                }
+            }
+        } catch (Throwable e) {
+            // Catching a throwable as we do no need to interrupt the code flow since these are logging purposes.
+            if (log.isDebugEnabled()) {
+                log.debug("Error occurred while executing oAuthEventInterceptorProxy for onTokenIssueException.", e);
+            }
+        }
+    }
+
+    /**
+     * Publish event on introspection error.
+     *
+     * @param
+     */
+    public static void triggerOnIntrospectionExceptionListeners(OAuth2IntrospectionResponseDTO introspectionResponse) {
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("error", introspectionResponse.getError());
+
+        try {
+            OAuthEventInterceptor oAuthEventInterceptorProxy = OAuthComponentServiceHolder.getInstance()
+                    .getOAuthEventInterceptorProxy();
+
+            if (oAuthEventInterceptorProxy != null) {
+                try {
+                    oAuthEventInterceptorProxy.onTokenValidationException(params);
                 } catch (IdentityOAuth2Exception e) {
                     log.error("Error while invoking OAuthEventInterceptor for onTokenIssueException", e);
                 }
