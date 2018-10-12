@@ -2386,7 +2386,7 @@ public class OAuth2Util {
     }
 
     /**
-     * Publish event on introspection error.
+     * Extract information related to the token introspection and publish the event on introspection error.
      *
      * @param
      */

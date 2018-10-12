@@ -34,7 +34,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static org.wso2.carbon.identity.oauth.endpoint.util.EndpointUtil.triggerOnIntrospectionExceptionListeners;
+import static org.wso2.carbon.identity.oauth2.util.OAuth2Util.triggerOnIntrospectionExceptionListeners;
 
 @Path("/introspect")
 @Consumes({MediaType.APPLICATION_FORM_URLENCODED})

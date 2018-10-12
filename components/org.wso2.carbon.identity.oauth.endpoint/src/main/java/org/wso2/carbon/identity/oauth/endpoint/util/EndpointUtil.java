@@ -718,14 +718,4 @@ public class EndpointUtil {
             map.put(name, value);
         }
     }
-
-    /**
-     * Extract information related to the token request and exception and publish the event to listeners.
-     *
-     * @param introspectionResponse
-     */
-    public static void triggerOnIntrospectionExceptionListeners(OAuth2IntrospectionResponseDTO introspectionResponse) {
-
-        OAuth2Util.triggerOnIntrospectionExceptionListeners(introspectionResponse);
-    }
 }
