@@ -2403,13 +2403,14 @@ public class OAuth2Util {
                 try {
                     oAuthEventInterceptorProxy.onTokenValidationException(params);
                 } catch (IdentityOAuth2Exception e) {
-                    log.error("Error while invoking OAuthEventInterceptor for onTokenIssueException", e);
+                    log.error("Error while invoking OAuthEventInterceptor for onTokenValidationException", e);
                 }
             }
         } catch (Throwable e) {
             // Catching a throwable as we do no need to interrupt the code flow since these are logging purposes.
             if (log.isDebugEnabled()) {
-                log.debug("Error occurred while executing oAuthEventInterceptorProxy for onTokenIssueException.", e);
+                log.debug("Error occurred while executing oAuthEventInterceptorProxy for onTokenValidationException."
+                        , e);
             }
         }
     }
