@@ -45,6 +45,7 @@ public class OAuth2IntrospectionEndpoint {
     private final static String DEFAULT_TOKEN_TYPE_HINT = "bearer";
     private final static String DEFAULT_TOKEN_TYPE = "Bearer";
     private final static String JWT_TOKEN_TYPE = "JWT";
+    private final static String INVALID_INPUT = "Invalid input";
 
     /**
      * Token introspection endpoint.
@@ -71,9 +72,10 @@ public class OAuth2IntrospectionEndpoint {
 
         if (StringUtils.isBlank(token)) {
             introspectionResponse = new OAuth2IntrospectionResponseDTO();
-            introspectionResponse.setError("Invalid input");
+            introspectionResponse.setError(INVALID_INPUT);
             triggerOnIntrospectionExceptionListeners(null, introspectionResponse);
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\": \"Invalid input\"}").build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(
+                    String.format("{\"error\": \"%s\" }", INVALID_INPUT)).build();
         }
 
         String[] claimsUris;
