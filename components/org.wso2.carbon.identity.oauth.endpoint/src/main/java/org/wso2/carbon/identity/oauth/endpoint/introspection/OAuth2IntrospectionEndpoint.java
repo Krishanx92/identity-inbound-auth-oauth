@@ -72,7 +72,7 @@ public class OAuth2IntrospectionEndpoint {
         if (StringUtils.isBlank(token)) {
             introspectionResponse = new OAuth2IntrospectionResponseDTO();
             introspectionResponse.setError("Invalid input");
-            triggerOnIntrospectionExceptionListeners(introspectionResponse);
+            triggerOnIntrospectionExceptionListeners(null, introspectionResponse);
             return Response.status(Response.Status.BAD_REQUEST).entity("{\"error\": \"Invalid input\"}").build();
         }
 

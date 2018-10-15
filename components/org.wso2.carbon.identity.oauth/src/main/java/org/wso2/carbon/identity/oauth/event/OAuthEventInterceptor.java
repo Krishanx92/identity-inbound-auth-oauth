@@ -194,7 +194,8 @@ public interface OAuthEventInterceptor extends IdentityHandler {
     /**
      * This will be called if an exception occurred during the token introspection
      */
-    default void onTokenValidationException(Map<String, Object> params) throws IdentityOAuth2Exception {
+    default void onTokenValidationException(OAuth2TokenValidationRequestDTO introspectionRequest,
+                                            Map<String, Object> params) throws IdentityOAuth2Exception {
 
         // Nothing to implement
     }

@@ -110,7 +110,7 @@ public class OAuth2TokenValidationService extends AbstractAdmin {
             OAuth2IntrospectionResponseDTO errRespDTO = new OAuth2IntrospectionResponseDTO();
             errRespDTO.setActive(false);
             errRespDTO.setError(e.getMessage());
-            triggerOnIntrospectionExceptionListeners(errRespDTO);
+            triggerOnIntrospectionExceptionListeners(validationReq, errRespDTO);
             return errRespDTO;
         }
         try {

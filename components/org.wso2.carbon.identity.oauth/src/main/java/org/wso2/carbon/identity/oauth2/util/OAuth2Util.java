@@ -80,6 +80,7 @@ import org.wso2.carbon.identity.oauth2.authz.OAuthAuthzReqMessageContext;
 import org.wso2.carbon.identity.oauth2.config.SpOAuth2ExpiryTimeConfiguration;
 import org.wso2.carbon.identity.oauth2.dao.OAuthTokenPersistenceFactory;
 import org.wso2.carbon.identity.oauth2.dto.OAuth2IntrospectionResponseDTO;
+import org.wso2.carbon.identity.oauth2.dto.OAuth2TokenValidationRequestDTO;
 import org.wso2.carbon.identity.oauth2.internal.OAuth2ServiceComponentHolder;
 import org.wso2.carbon.identity.oauth2.model.AccessTokenDO;
 import org.wso2.carbon.identity.oauth2.model.ClientCredentialDO;
@@ -2390,7 +2391,8 @@ public class OAuth2Util {
      *
      * @param
      */
-    public static void triggerOnIntrospectionExceptionListeners(OAuth2IntrospectionResponseDTO introspectionResponse) {
+    public static void triggerOnIntrospectionExceptionListeners(OAuth2TokenValidationRequestDTO introspectionRequest,
+                                                                OAuth2IntrospectionResponseDTO introspectionResponse) {
 
         Map<String, Object> params = new HashMap<>();
         params.put("error", introspectionResponse.getError());
@@ -2401,7 +2403,7 @@ public class OAuth2Util {
 
             if (oAuthEventInterceptorProxy != null) {
                 try {
-                    oAuthEventInterceptorProxy.onTokenValidationException(params);
+                    oAuthEventInterceptorProxy.onTokenValidationException(introspectionRequest, params);
                 } catch (IdentityOAuth2Exception e) {
                     log.error("Error while invoking OAuthEventInterceptor for onTokenValidationException", e);
                 }
