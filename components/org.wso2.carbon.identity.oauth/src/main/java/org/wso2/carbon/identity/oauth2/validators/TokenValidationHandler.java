@@ -632,50 +632,7 @@ public class TokenValidationHandler {
      * @throws IdentityOAuth2Exception
      */
     private AccessTokenDO findAccessToken(String tokenIdentifier) throws IdentityOAuth2Exception {
-
-        String consumerKey = null;
-        OauthTokenIssuer oauthTokenIssuer = null;
-        if (isJWT(tokenIdentifier) || isIDTokenEncrypted(tokenIdentifier)) {
-            oauthTokenIssuer = new JWTTokenIssuer();
-        } else {
-            try {
-                consumerKey = OAuth2Util.getClientIdForAccessToken(tokenIdentifier);
-                if (consumerKey != null) {
-                    oauthTokenIssuer = OAuth2Util.getOAuthTokenIssuerForOAuthApp(consumerKey);
-                }
-            } catch (IllegalArgumentException e) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Consumer key is not found for token identifier: " + tokenIdentifier, e);
-                }
-            } catch (InvalidOAuthClientException e) {
-                throw new IdentityOAuth2Exception(
-                        "Error while retrieving oauth issuer for the app with clientId: " + consumerKey, e);
-            }
-        }
-
-        try {
-            if (oauthTokenIssuer == null) {
-                //server level token issuer
-                oauthTokenIssuer = OAuthServerConfiguration.getInstance().getIdentityOauthTokenIssuer();
-                log.info("No token issuer is found for access token identifier. Hence default token issuer is used.");
-            }
-
-            if (oauthTokenIssuer.usePersistedAccessTokenAlias()) {
-                return OAuth2Util.getAccessTokenDOfromTokenIdentifier(oauthTokenIssuer
-                        .getAccessTokenHash(tokenIdentifier));
-            } else {
-                return OAuth2Util.getAccessTokenDOfromTokenIdentifier(tokenIdentifier);
-            }
-        } catch (OAuthSystemException e) {
-            if (log.isDebugEnabled()) {
-                if (IdentityUtil.isTokenLoggable(IdentityConstants.IdentityTokens.ACCESS_TOKEN)) {
-                    log.debug("Error while getting access token hash from token: " + tokenIdentifier, e);
-                } else {
-                    log.debug("Error while getting access token hash.", e);
-                }
-            }
-            throw new IdentityOAuth2Exception("Error while getting access token hash.", e);
-        }
+        return OAuth2Util.getAccessTokenDOfromTokenIdentifier(tokenIdentifier);
     }
 
     private AccessTokenDO findRefreshToken(String refreshToken) throws IdentityOAuth2Exception {
