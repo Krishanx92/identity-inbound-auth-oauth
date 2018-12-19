@@ -118,8 +118,6 @@ public abstract class AbstractUserInfoResponseBuilder implements UserInfoRespons
         } catch (IdentityOAuth2Exception e) {
             throw new UserInfoEndpointException(
                     "Error while retrieving access token information to derive the grant type." , e);
-        } catch (OAuthSystemException e) {
-            throw new UserInfoEndpointException("Error while retrieving access token identifier" , e);
         }
     }
 
@@ -282,8 +280,6 @@ public abstract class AbstractUserInfoResponseBuilder implements UserInfoRespons
             oAuthAppDO = OAuth2Util.getAppInformationByClientId(clientId);
         } catch (IdentityOAuth2Exception | InvalidOAuthClientException e) {
             throw new UserInfoEndpointException("Error while retrieving OAuth app information for clientId: " + clientId);
-        } catch (OAuthSystemException e) {
-            throw new UserInfoEndpointException("Error while retrieving token issuer ");
         }
         return OAuth2Util.getTenantDomainOfOauthApp(oAuthAppDO);
     }
@@ -363,23 +359,7 @@ public abstract class AbstractUserInfoResponseBuilder implements UserInfoRespons
         return tokenResponse.getAuthorizationContextToken().getTokenString();
     }
 
-    private String getAccessTokenIdentifier(OAuth2TokenValidationResponseDTO tokenResponse)
-            throws OAuthSystemException {
-
-        String accessToken = tokenResponse.getAuthorizationContextToken().getTokenString();
-        String tokenIdentifier = null;
-        try {
-            OauthTokenIssuer tokenIssuer = OAuth2Util.getTokenIssuer(accessToken);
-            if (tokenIssuer != null) {
-                tokenIdentifier = tokenIssuer.getAccessTokenHash(accessToken);
-            }
-        } catch (OAuthSystemException e) {
-            log.error("Error while getting token identifier");
-            throw new OAuthSystemException(e);
-        } catch (IdentityOAuth2Exception e) {
-            log.error("Error while retrieving token issuer");
-            throw new OAuthSystemException(e);
-        }
-        return tokenIdentifier;
+    private String getAccessTokenIdentifier(OAuth2TokenValidationResponseDTO tokenResponse) {
+        return tokenResponse.getAuthorizationContextToken().getTokenString();
     }
 }
