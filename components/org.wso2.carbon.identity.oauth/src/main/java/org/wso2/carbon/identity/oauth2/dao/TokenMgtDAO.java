@@ -2984,8 +2984,8 @@ public class TokenMgtDAO {
                     String subjectIdentifier = resultSet.getString(10);
                     // data loss at dividing the validity period but can be neglected
 
-                    AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(tenantAwareUsernameWithNoUserDomain, userDomain,
-                            OAuth2Util.getTenantDomain(tenantId));
+                    AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(tenantAwareUsernameWithNoUserDomain,
+                            userDomain, OAuth2Util.getTenantDomain(tenantId));
 
                     ServiceProvider serviceProvider;
                     try {
