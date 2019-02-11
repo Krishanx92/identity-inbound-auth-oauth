@@ -610,10 +610,9 @@ public class TokenMgtDAO {
                     String tokenId = resultSet.getString(9);
                     String subjectIdentifier = resultSet.getString(10);
                     // data loss at dividing the validity period but can be neglected
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(tenantAwareUsernameWithNoUserDomain);
-                    user.setTenantDomain(tenantDomain);
-                    user.setUserStoreDomain(userDomain);
+                    AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(tenantAwareUsernameWithNoUserDomain,
+                            userDomain, tenantDomain);
+
                     ServiceProvider serviceProvider;
                     try {
                         serviceProvider = OAuth2ServiceComponentHolder.getApplicationMgtService().
@@ -710,10 +709,8 @@ public class TokenMgtDAO {
                     String tokenId = resultSet.getString(9);
                     String subjectIdentifier = resultSet.getString(10);
 
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(tenantAwareUsernameWithNoUserDomain);
-                    user.setTenantDomain(tenantDomain);
-                    user.setUserStoreDomain(userDomain);
+                    AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(tenantAwareUsernameWithNoUserDomain,
+                            userDomain, tenantDomain);
                     ServiceProvider serviceProvider;
                     try {
                         serviceProvider = OAuth2ServiceComponentHolder.getApplicationMgtService().
@@ -804,10 +801,9 @@ public class TokenMgtDAO {
                     subjectIdentifier = resultSet.getString(12);
                     pkceCodeChallenge = resultSet.getString(13);
                     pkceCodeChallengeMethod = resultSet.getString(14);
-                    user = new AuthenticatedUser();
-                    user.setUserName(authorizedUser);
-                    user.setTenantDomain(tenantDomain);
-                    user.setUserStoreDomain(userstoreDomain);
+
+                    user = OAuth2Util.createAuthenticatedUser(authorizedUser,
+                            userstoreDomain, tenantDomain);
                     ServiceProvider serviceProvider;
                     try {
                         serviceProvider = OAuth2ServiceComponentHolder.getApplicationMgtService().
@@ -859,10 +855,9 @@ public class TokenMgtDAO {
                     codeId = resultSet.getString(11);
                     subjectIdentifier = resultSet.getString(12);
 
-                    user = new AuthenticatedUser();
-                    user.setUserName(authorizedUser);
-                    user.setTenantDomain(tenantDomain);
-                    user.setUserStoreDomain(userstoreDomain);
+                    user = OAuth2Util.createAuthenticatedUser(authorizedUser,
+                            userstoreDomain, tenantDomain);
+
                     ServiceProvider serviceProvider;
                     try {
                         serviceProvider = OAuth2ServiceComponentHolder.getApplicationMgtService().
@@ -1099,10 +1094,10 @@ public class TokenMgtDAO {
                     validationDataDO.setTokenId(resultSet.getString(9));
                     validationDataDO.setGrantType(resultSet.getString(10));
                     String subjectIdentifier = resultSet.getString(11);
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(userName);
-                    user.setUserStoreDomain(userDomain);
-                    user.setTenantDomain(tenantDomain);
+
+                    AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(userName,
+                            userDomain, tenantDomain);
+
                     ServiceProvider serviceProvider;
                     try {
                         serviceProvider = OAuth2ServiceComponentHolder.getApplicationMgtService().
@@ -1188,10 +1183,8 @@ public class TokenMgtDAO {
                     String grantType = resultSet.getString(13);
                     String subjectIdentifier = resultSet.getString(14);
 
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(authorizedUser);
-                    user.setUserStoreDomain(userDomain);
-                    user.setTenantDomain(tenantDomain);
+                    AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(authorizedUser,
+                            userDomain, tenantDomain);
                     ServiceProvider serviceProvider;
                     try {
                         serviceProvider = OAuth2ServiceComponentHolder.getApplicationMgtService().
@@ -1652,10 +1645,10 @@ public class TokenMgtDAO {
                     String userDomain = rs.getString(4);
                     String tokenSope = rs.getString(5);
                     String[] scope = OAuth2Util.buildScopeArray(tokenSope);
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(authzUser);
-                    user.setTenantDomain(OAuth2Util.getTenantDomain(tenentId));
-                    user.setUserStoreDomain(userDomain);
+
+                    AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(authzUser,
+                            userDomain, OAuth2Util.getTenantDomain(tenentId));
+
                     AccessTokenDO aTokenDetail = new AccessTokenDO();
                     aTokenDetail.setAccessToken(token);
                     aTokenDetail.setConsumerKey(consumerKey);
@@ -2116,10 +2109,9 @@ public class TokenMgtDAO {
                     userStoreDomain = resultSet.getString(11);
                     String consumerKey = resultSet.getString(12);
 
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(authzUser);
-                    user.setTenantDomain(OAuth2Util.getTenantDomain(tenantId));
-                    user.setUserStoreDomain(userStoreDomain);
+                    AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(authzUser, userStoreDomain,
+                            OAuth2Util.getTenantDomain(tenantId));
+
                     AccessTokenDO dataDO = new AccessTokenDO(consumerKey, user, scope, issuedTime,
                             refreshTokenIssuedTime, validityPeriodInMillis,
                             refreshTokenValidityPeriodMillis, tokenType);
@@ -2185,10 +2177,9 @@ public class TokenMgtDAO {
                     String authzUser = resultSet.getString(10);
                     String consumerKey = resultSet.getString(11);
 
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(authzUser);
-                    user.setTenantDomain(OAuth2Util.getTenantDomain(tenantId));
-                    user.setUserStoreDomain(userStoreDomain);
+                    AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(authzUser, userStoreDomain,
+                            OAuth2Util.getTenantDomain(tenantId));
+
                     AccessTokenDO dataDO = new AccessTokenDO(consumerKey, user, scope, issuedTime,
                             refreshTokenIssuedTime, validityPeriodInMillis,
                             refreshTokenValidityPeriodMillis, tokenType);
@@ -2275,10 +2266,8 @@ public class TokenMgtDAO {
                 String callbackUrl = rs.getString(8);
                 String userStoreDomain = rs.getString(9);
 
-                AuthenticatedUser user = new AuthenticatedUser();
-                user.setUserName(authzUser);
-                user.setUserStoreDomain(userStoreDomain);
-                user.setTenantDomain(OAuth2Util.getTenantDomain(tenantId));
+                AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(authzUser, userStoreDomain,
+                        OAuth2Util.getTenantDomain(tenantId));
                 latestAuthzCodes.add(new AuthzCodeDO(user, scope, issuedTime, validityPeriodInMillis, callbackUrl,
                         consumerKey, authzCode, authzCodeId));
             }
@@ -2323,10 +2312,8 @@ public class TokenMgtDAO {
                 long validityPeriodInMillis = rs.getLong(7);
                 String callbackUrl = rs.getString(8);
 
-                AuthenticatedUser user = new AuthenticatedUser();
-                user.setUserName(authzUser);
-                user.setUserStoreDomain(userStoreDomain);
-                user.setTenantDomain(OAuth2Util.getTenantDomain(tenantId));
+                AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(authzUser, userStoreDomain,
+                        OAuth2Util.getTenantDomain(tenantId));
                 latestAuthzCodes.add(new AuthzCodeDO(user, scope, issuedTime, validityPeriodInMillis, callbackUrl,
                         consumerKey, authzCode, authzCodeId));
             }
@@ -2996,10 +2983,9 @@ public class TokenMgtDAO {
                     String tokenId = resultSet.getString(9);
                     String subjectIdentifier = resultSet.getString(10);
                     // data loss at dividing the validity period but can be neglected
-                    AuthenticatedUser user = new AuthenticatedUser();
-                    user.setUserName(tenantAwareUsernameWithNoUserDomain);
-                    user.setTenantDomain(tenantDomain);
-                    user.setUserStoreDomain(userDomain);
+
+                    AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(tenantAwareUsernameWithNoUserDomain,
+                            userDomain, OAuth2Util.getTenantDomain(tenantId));
 
                     ServiceProvider serviceProvider;
                     try {
@@ -3145,10 +3131,8 @@ public class TokenMgtDAO {
                 String tokenId = resultSet.getString(8);
                 String subjectIdentifier = resultSet.getString(9);
                 // data loss at dividing the validity period but can be neglected
-                AuthenticatedUser user = new AuthenticatedUser();
-                user.setUserName(tenantAwareUsernameWithNoUserDomain);
-                user.setTenantDomain(tenantDomain);
-                user.setUserStoreDomain(userDomain);
+                AuthenticatedUser user = OAuth2Util.createAuthenticatedUser(tenantAwareUsernameWithNoUserDomain,
+                        userDomain, tenantDomain);
                 ServiceProvider serviceProvider;
                 try {
                     serviceProvider = OAuth2ServiceComponentHolder.getApplicationMgtService().
