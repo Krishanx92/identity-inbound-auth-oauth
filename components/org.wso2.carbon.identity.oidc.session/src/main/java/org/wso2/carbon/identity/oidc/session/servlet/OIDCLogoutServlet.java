@@ -384,8 +384,10 @@ public class OIDCLogoutServlet extends HttpServlet {
 
         if (StringUtils.isBlank(clientId)) {
             clientId = SignedJWT.parse(idToken).getJWTClaimsSet().getAudience().get(0);
-            log.info("Provided ID Token does not contain azp claim with client ID. " +
-                    "Client ID is extracted from the aud claim in the ID Token.");
+            if (log.isDebugEnabled()) {
+                log.debug("Provided ID Token does not contain azp claim with client ID. Client ID : " + clientId +
+                        " is extracted from the aud claim in the ID Token.");
+            }
         }
 
         return clientId;
