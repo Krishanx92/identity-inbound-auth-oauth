@@ -152,6 +152,11 @@ public class OAuth2Util {
     public static final String ENABLE_OPENID_CONNECT_AUDIENCES = "EnableAudiences";
     private static final String OPENID_CONNECT_AUDIENCES = "Audiences";
     public static final String OPENID_CONNECT_AUDIENCE = "audience";
+    /*
+     * Maintain a separate parameter "OPENID_CONNECT_AUDIENCE_IDENTITY_CONFIG" to get the audience from the identity.xml
+     * when user didn't add any audience in the UI while creating service provider.
+     */
+    public static final String OPENID_CONNECT_AUDIENCE_IDENTITY_CONFIG = "Audience";
     private static final String DOT_SEPARATER = ".";
 
     public static final String DEFAULT_TOKEN_TYPE = "Default";
@@ -1481,7 +1486,7 @@ public class OAuth2Util {
         }
 
         Iterator iterator = audienceConfig.getChildrenWithName(new QName(IdentityCoreConstants.
-                IDENTITY_DEFAULT_NAMESPACE, OPENID_CONNECT_AUDIENCE));
+                IDENTITY_DEFAULT_NAMESPACE, OPENID_CONNECT_AUDIENCE_IDENTITY_CONFIG));
         while (iterator.hasNext()) {
             OMElement supportedAudience = (OMElement) iterator.next();
             String supportedAudienceName;
