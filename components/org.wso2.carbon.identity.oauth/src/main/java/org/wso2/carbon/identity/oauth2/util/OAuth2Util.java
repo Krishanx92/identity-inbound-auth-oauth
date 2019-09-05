@@ -1454,13 +1454,12 @@ public class OAuth2Util {
         List<String> audiences = new ArrayList<>();
 
         // Priority should be given to service provider specific audiences over globally configured ones.
-        if (OAuth2ServiceComponentHolder.isAudienceEnabled()) {
-            List<String> audienceList = Arrays.asList(oAuthAppDO.getAudiences());
-            audiences = new ArrayList<>(audienceList);
+        if (OAuth2ServiceComponentHolder.isAudienceEnabled() && oAuthAppDO != null) {
+            audiences = getAudienceListFromOAuthAppDO(oAuthAppDO);
             if (CollectionUtils.isNotEmpty(audiences)) {
                 if (log.isDebugEnabled()) {
-                    log.debug("OIDC Audiences " + audiences + " had been retrieved for the client id " +
-                            oAuthAppDO.getOauthConsumerKey());
+                    log.debug("OIDC Audiences " + audiences + " had been retrieved for the client_id: " + oAuthAppDO
+                            .getOauthConsumerKey());
                 }
                 return audiences;
             }
@@ -1498,6 +1497,21 @@ public class OAuth2Util {
             }
         }
         return audiences;
+    }
+
+    /**
+     * Handles possible null pointer exception.
+     *
+     * @param oAuthAppDO OAuthAppDO object
+     * @return List of audiences
+     */
+    private static List<String> getAudienceListFromOAuthAppDO(OAuthAppDO oAuthAppDO) {
+
+        if (oAuthAppDO.getAudiences() == null) {
+            return new ArrayList<>();
+        } else {
+            return new ArrayList<>(Arrays.asList(oAuthAppDO.getAudiences()));
+        }
     }
 
     /**
