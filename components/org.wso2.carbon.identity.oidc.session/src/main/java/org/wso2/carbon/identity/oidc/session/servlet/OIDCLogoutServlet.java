@@ -205,7 +205,7 @@ public class OIDCLogoutServlet extends HttpServlet {
             OAuthAppDO oAuthAppDO = appDAO.getAppInformation(clientId);
 
             appTenantDomain = MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
-            if (oAuthAppDO.getUser() != null) {
+            if (oAuthAppDO.getUser() != null && oAuthAppDO.getUser().getTenantDomain() != null) {
                 appTenantDomain = oAuthAppDO.getUser().getTenantDomain();
             }
 
