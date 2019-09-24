@@ -190,6 +190,7 @@ public class OIDCLogoutServlet extends HttpServlet {
                 .getParameter(OIDCSessionConstants.OIDC_STATE_PARAM);
 
         String clientId;
+        String appTenantDomain;
         try {
             if (!validateIdToken(idTokenHint)) {
                 String msg = "ID token signature validation failed.";
@@ -202,6 +203,11 @@ public class OIDCLogoutServlet extends HttpServlet {
             clientId = extractClientFromIdToken(idTokenHint);
             OAuthAppDAO appDAO = new OAuthAppDAO();
             OAuthAppDO oAuthAppDO = appDAO.getAppInformation(clientId);
+
+            appTenantDomain = MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
+            if (oAuthAppDO.getUser() != null && oAuthAppDO.getUser().getTenantDomain() != null) {
+                appTenantDomain = oAuthAppDO.getUser().getTenantDomain();
+            }
 
             if (!validatePostLogoutUri(postLogoutRedirectUri, oAuthAppDO.getCallbackUrl())) {
                 String msg = "Post logout URI does not match with registered callback URI.";
@@ -222,6 +228,7 @@ public class OIDCLogoutServlet extends HttpServlet {
 
         Map<String, String> paramMap = new HashMap<>();
         paramMap.put(OIDCSessionConstants.OIDC_CACHE_CLIENT_ID_PARAM, clientId);
+        paramMap.put(OIDCSessionConstants.OIDC_CACHE_TENANT_DOMAIN_PARAM, appTenantDomain);
         OIDCSessionDataCacheEntry cacheEntry = new OIDCSessionDataCacheEntry();
         cacheEntry.setIdToken(idTokenHint);
         cacheEntry.setPostLogoutRedirectUri(postLogoutRedirectUri);
@@ -429,7 +436,9 @@ public class OIDCLogoutServlet extends HttpServlet {
         OIDCSessionDataCacheEntry cacheEntry = getSessionDataFromCache(opBrowserStateCookie.getValue());
         if (cacheEntry != null) {
             authenticationRequest
-                    .setRelyingParty(cacheEntry.getParamMap().get(OIDCSessionConstants.OIDC_CLIENT_ID_PARAM));
+                    .setRelyingParty(cacheEntry.getParamMap().get(OIDCSessionConstants.OIDC_CACHE_CLIENT_ID_PARAM));
+            authenticationRequest
+                    .setTenantDomain(cacheEntry.getParamMap().get(OIDCSessionConstants.OIDC_CACHE_TENANT_DOMAIN_PARAM));
             addSessionDataToCache(sessionDataKey, cacheEntry);
         }
 
@@ -490,7 +499,11 @@ public class OIDCLogoutServlet extends HttpServlet {
         if (object != null) {
             AuthenticatorFlowStatus status = (AuthenticatorFlowStatus) object;
             if (status == AuthenticatorFlowStatus.INCOMPLETE) {
-                response.sendRedirect(responseWrapper.getRedirectURL());
+                if (responseWrapper.isRedirect()) {
+                    response.sendRedirect(responseWrapper.getRedirectURL());
+                } else if (responseWrapper.getContent().length > 0) {
+                    responseWrapper.write();
+                }
             } else {
                 handleLogoutResponseFromFramework(requestWrapper, response);
             }
