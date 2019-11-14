@@ -861,5 +861,3 @@ public class ResponseTypeHandlerUtil {
         }
     }
 }
-
-
