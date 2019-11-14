@@ -149,7 +149,7 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
 
                     long expireTime = OAuth2Util.getTokenExpireTimeMillis(existingAccessTokenDO);
 
-                    if ((expireTime > 0 || expireTime < 0)) {
+                    if ((expireTime != 0)) {
                         // Return still valid existing access token when JWTTokenIssuer is not used.
                         if (isNotRenewAccessTokenPerRequest(oauthIssuerImpl)) {
                             if (log.isDebugEnabled()) {
@@ -181,7 +181,7 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
 
                         long refreshTokenExpiryTime = OAuth2Util.getRefreshTokenExpireTimeMillis(existingAccessTokenDO);
 
-                        if (refreshTokenExpiryTime < 0 || refreshTokenExpiryTime > 0) {
+                        if (refreshTokenExpiryTime != 0) {
 
                             if (log.isDebugEnabled()) {
                                 log.debug("Access token has expired, But refresh token is still valid. User existing " +
@@ -226,7 +226,7 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
                     long refreshTokenExpiryTime = OAuth2Util.getRefreshTokenExpireTimeMillis(existingAccessTokenDO);
 
                     if (OAuthConstants.TokenStates.TOKEN_STATE_ACTIVE.equals(existingAccessTokenDO.getTokenState())
-                            && (expiryTime > 0 || expiryTime < 0)) {
+                            && (expiryTime != 0)) {
                         // Return still valid existing access token when JWTTokenIssuer is not used.
                         if (isNotRenewAccessTokenPerRequest(oauthIssuerImpl)) {
                             // Token is active and valid.
@@ -276,7 +276,7 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
                         if (OAuthConstants.TokenStates.TOKEN_STATE_ACTIVE.equals(tokenState)) {
 
                             // Token is expired. If refresh token is still valid, use it.
-                            if (refreshTokenExpiryTime > 0 || refreshTokenExpiryTime < 0) {
+                            if (refreshTokenExpiryTime != 0) {
                                 if (log.isDebugEnabled()) {
                                     log.debug("Access token has expired, But refresh token is still valid. User " +
                                             "existing " + "refresh token.");
