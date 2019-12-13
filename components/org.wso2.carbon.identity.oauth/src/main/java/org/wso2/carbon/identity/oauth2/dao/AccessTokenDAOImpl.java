@@ -1616,7 +1616,7 @@ public class AccessTokenDAOImpl extends AbstractOAuthDAO implements AccessTokenD
         }
     }
 
-    private void recoverFromConAppKeyConstraintViolation(String accessToken, String consumerKey, AccessTokenDO
+    protected void recoverFromConAppKeyConstraintViolation(String accessToken, String consumerKey, AccessTokenDO
             accessTokenDO, Connection connection, String userStoreDomain, int retryAttemptCounter)
             throws IdentityOAuth2Exception {
 
