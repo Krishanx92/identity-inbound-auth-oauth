@@ -178,5 +178,4 @@ public class PublicClientAuthenticator extends AbstractOAuthClientAuthenticator 
         Map<String, String> stringContent = getBodyParameters(params);
         context.setClientId(stringContent.get(OAuth.OAUTH_CLIENT_ID));
     }
-
 }
