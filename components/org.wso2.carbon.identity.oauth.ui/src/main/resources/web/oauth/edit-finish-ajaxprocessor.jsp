@@ -62,12 +62,16 @@
    	StringBuffer buff = new StringBuffer();
     boolean pkceMandatory = false;
     boolean pkceSupportPlain = false;
+    boolean bypassClientCredentials = false;
 
     if(request.getParameter("pkce") != null) {
         pkceMandatory = true;
     }
     if(request.getParameter("pkce_plain") != null) {
         pkceSupportPlain = true;
+    }
+    if (request.getParameter("bypass_client_credentials") != null) {
+        bypassClientCredentials = true;
     }
     
     // OIDC related properties
@@ -143,6 +147,7 @@
                 app.setIdTokenEncryptionAlgorithm(idTokenEncryptionAlgorithm);
                 app.setIdTokenEncryptionMethod(idTokenEncryptionMethod);
             }
+            app.setBypassClientCredentials(bypassClientCredentials);
             
             client.updateOAuthApplicationData(app);
             String message = resourceBundle.getString("app.updated.successfully");

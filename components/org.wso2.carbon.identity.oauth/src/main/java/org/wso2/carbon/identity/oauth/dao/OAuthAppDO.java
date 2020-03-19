@@ -41,6 +41,7 @@ public class OAuthAppDO implements Serializable {
     private long applicationAccessTokenExpiryTime;
     private long refreshTokenExpiryTime;
     private String[] audiences = new String[0];
+    private boolean bypassClientCredentials;
     // OIDC related properties.
     private boolean requestObjectSignatureValidationEnabled;
     private boolean idTokenEncryptionEnabled;
@@ -234,5 +235,15 @@ public class OAuthAppDO implements Serializable {
     public void setAppOwner(AuthenticatedUser appOwner) {
 
         this.appOwner = appOwner;
+    }
+
+    public boolean isBypassClientCredentials() {
+
+        return bypassClientCredentials;
+    }
+
+    public void setBypassClientCredentials(boolean bypassClientCredentials) {
+
+        this.bypassClientCredentials = bypassClientCredentials;
     }
 }

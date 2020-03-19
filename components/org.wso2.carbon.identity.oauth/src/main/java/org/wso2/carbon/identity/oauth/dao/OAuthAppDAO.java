@@ -61,6 +61,7 @@ import java.util.Set;
 
 import static org.wso2.carbon.identity.oauth.OAuthUtil.handleError;
 import static org.wso2.carbon.identity.oauth.common.OAuthConstants.OIDCConfigProperties.BACK_CHANNEL_LOGOUT_URL;
+import static org.wso2.carbon.identity.oauth.common.OAuthConstants.OIDCConfigProperties.BYPASS_CLIENT_CREDENTIALS;
 import static org.wso2.carbon.identity.oauth.common.OAuthConstants.OIDCConfigProperties.ID_TOKEN_ENCRYPTION_ALGORITHM;
 import static org.wso2.carbon.identity.oauth.common.OAuthConstants.OIDCConfigProperties.ID_TOKEN_ENCRYPTION_METHOD;
 import static org.wso2.carbon.identity.oauth.common.OAuthConstants.OIDCConfigProperties.ID_TOKEN_ENCRYPTED;
@@ -647,6 +648,10 @@ public class OAuthAppDAO {
         addOrUpdateOIDCSpProperty(preprocessedClientId, spTenantId, spOIDCProperties, TOKEN_TYPE,
                 oauthAppDO.getTokenType(), prepStatementForPropertyAdd, preparedStatementForPropertyUpdate);
 
+        addOrUpdateOIDCSpProperty(preprocessedClientId, spTenantId, spOIDCProperties, BYPASS_CLIENT_CREDENTIALS,
+                String.valueOf(oauthAppDO.isBypassClientCredentials()), prepStatementForPropertyAdd,
+                preparedStatementForPropertyUpdate);
+
         // Execute batched add/update/delete.
         prepStatementForPropertyAdd.executeBatch();
         preparedStatementForPropertyUpdate.executeBatch();
@@ -1068,6 +1073,9 @@ public class OAuthAppDAO {
             addToBatchForOIDCPropertyAdd(processedClientId, spTenantId, prepStmtAddOIDCProperty,
                     TOKEN_TYPE, consumerAppDO.getTokenType());
 
+            addToBatchForOIDCPropertyAdd(processedClientId, spTenantId, prepStmtAddOIDCProperty,
+                    BYPASS_CLIENT_CREDENTIALS, String.valueOf(consumerAppDO.isBypassClientCredentials()));
+
             prepStmtAddOIDCProperty.executeBatch();
         }
     }
@@ -1141,6 +1149,10 @@ public class OAuthAppDAO {
 
         String tokenType = getFirstPropertyValue(spOIDCProperties, TOKEN_TYPE);
         oauthApp.setTokenType(tokenType);
+
+        boolean bypassClientCreds = Boolean.parseBoolean(
+                getFirstPropertyValue(spOIDCProperties, BYPASS_CLIENT_CREDENTIALS));
+        oauthApp.setBypassClientCredentials(bypassClientCreds);
     }
 
     private String getFirstPropertyValue(Map<String, List<String>> propertyMap, String key) {

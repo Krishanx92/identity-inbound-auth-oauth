@@ -41,6 +41,7 @@ import org.wso2.carbon.identity.oauth2.OAuth2TokenValidationService;
 import org.wso2.carbon.identity.oauth2.client.authentication.BasicAuthClientAuthenticator;
 import org.wso2.carbon.identity.oauth2.client.authentication.OAuthClientAuthenticator;
 import org.wso2.carbon.identity.oauth2.client.authentication.OAuthClientAuthnService;
+import org.wso2.carbon.identity.oauth2.client.authentication.PublicClientAuthenticator;
 import org.wso2.carbon.identity.oauth2.dao.SQLQueries;
 import org.wso2.carbon.identity.oauth2.listener.TenantCreationEventListener;
 import org.wso2.carbon.identity.oauth2.util.OAuth2Util;
@@ -110,11 +111,16 @@ public class OAuth2ServiceComponent {
             bundleContext.registerService(OAuthServerConfiguration.class.getName(), oauthServerConfig, null);
             OAuth2TokenValidationService tokenValidationService = new OAuth2TokenValidationService();
             bundleContext.registerService(OAuth2TokenValidationService.class.getName(), tokenValidationService, null);
+
             OAuthClientAuthnService clientAuthnService = new OAuthClientAuthnService();
             bundleContext.registerService(OAuthClientAuthnService.class.getName(), clientAuthnService, null);
             BasicAuthClientAuthenticator basicAuthClientAuthenticator = new BasicAuthClientAuthenticator();
             bundleContext.registerService(OAuthClientAuthenticator.class.getName(), basicAuthClientAuthenticator,
                     null);
+            PublicClientAuthenticator publicClientAuthenticator = new PublicClientAuthenticator();
+            bundleContext.registerService(OAuthClientAuthenticator.class.getName(), publicClientAuthenticator,
+                    null);
+
             if (log.isDebugEnabled()) {
                 log.debug("Identity OAuth bundle is activated");
             }

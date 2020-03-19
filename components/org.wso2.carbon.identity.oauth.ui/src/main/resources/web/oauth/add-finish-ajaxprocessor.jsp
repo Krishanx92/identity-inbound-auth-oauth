@@ -59,7 +59,7 @@
 
 	boolean pkceMandatory = false;
 	boolean pkceSupportPlain = false;
-
+    boolean bypassClientCredentials = false;
 
 	if(request.getParameter("pkce") != null) {
 		pkceMandatory = true;
@@ -67,6 +67,9 @@
 	if(request.getParameter("pkce_plain") != null) {
 		pkceSupportPlain = true;
 	}
+    if (request.getParameter("bypass_client_credentials") != null) {
+        bypassClientCredentials = true;
+    }
     
     // OIDC related properties
     boolean isRequestObjectSignatureValidated = Boolean.parseBoolean(request.getParameter("validateRequestObjectSignature"));
@@ -138,6 +141,7 @@
             }
             app.setPkceMandatory(pkceMandatory);
             app.setPkceSupportPlain(pkceSupportPlain);
+            app.setBypassClientCredentials(bypassClientCredentials);
             
             // Set OIDC related configuration properties.
             app.setRequestObjectSignatureValidationEnabled(isRequestObjectSignatureValidated);
