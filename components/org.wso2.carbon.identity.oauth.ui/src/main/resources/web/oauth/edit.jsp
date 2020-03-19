@@ -545,6 +545,18 @@
                                 </tr>
                                 <% } %>
                                 <% } %>
+    
+                                <tr id="bypass_client_credentials">
+                                    <td colspan="2">
+                                        <label>
+                                            <input type="checkbox" name="bypass_client_credentials" value="yes" <%=(app.getBypassClientCredentials() ? "checked" : "")%> />
+                                            <fmt:message key='bypassclientcreds.support.plain'/>
+                                        </label>
+                                        <div class="sectionHelp">
+                                            <fmt:message key='bypassclientcreds.support.plain.hint'/>
+                                        </div>
+                                    </td>
+                                </tr>
 
                                 <tr>
                                     <td class="leftCol-med"><fmt:message key='user.access.token.expiry.time'/></td>
