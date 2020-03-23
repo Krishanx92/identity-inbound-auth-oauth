@@ -176,6 +176,10 @@ public class PublicClientAuthenticator extends AbstractOAuthClientAuthenticator 
     private void setClientCredentialsFromParam(Map<String, List> params, OAuthClientAuthnContext context) {
 
         Map<String, String> stringContent = getBodyParameters(params);
-        context.setClientId(stringContent.get(OAuth.OAUTH_CLIENT_ID));
+
+        String clientId = stringContent.get(OAuth.OAUTH_CLIENT_ID);
+        if (clientId != null) {
+            context.setClientId(clientId);
+        }
     }
 }
