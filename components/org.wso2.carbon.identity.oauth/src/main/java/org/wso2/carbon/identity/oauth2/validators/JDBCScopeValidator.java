@@ -147,6 +147,13 @@ public class JDBCScopeValidator extends OAuth2ScopeValidator {
         if (accessTokenDO.getAuthzUser().isFederatedUser()
                 && (Boolean.parseBoolean(System.getProperty(CHECK_ROLES_FROM_SAML_ASSERTION)) ||
                 !(Boolean.parseBoolean(System.getProperty(RETRIEVE_ROLES_FROM_USERSTORE_FOR_SCOPE_VALIDATION))))) {
+            if (log.isDebugEnabled()) {
+                log.debug("isFederatedUser : " + accessTokenDO.getAuthzUser().isFederatedUser());
+                log.debug(CHECK_ROLES_FROM_SAML_ASSERTION + " :" +
+                        Boolean.parseBoolean(System.getProperty(CHECK_ROLES_FROM_SAML_ASSERTION)));
+                log.debug(RETRIEVE_ROLES_FROM_USERSTORE_FOR_SCOPE_VALIDATION + " :" +
+                        Boolean.parseBoolean(System.getProperty(RETRIEVE_ROLES_FROM_USERSTORE_FOR_SCOPE_VALIDATION)));
+            }
             return true;
         }
 
