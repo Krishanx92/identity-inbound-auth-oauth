@@ -46,6 +46,7 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1268,34 +1269,41 @@ public class OAuth2Util {
         return new ArrayList<>();
     }
 
-    public static AccessTokenDO getAccessTokenDOfromTokenIdentifier(String accessTokenIdentifier) throws
-            IdentityOAuth2Exception {
-        boolean cacheHit = false;
-        AccessTokenDO accessTokenDO = null;
+    public static AccessTokenDO getAccessTokenDOfromTokenIdentifier(String accessToken) throws IdentityOAuth2Exception {
 
-        // check the cache, if caching is enabled.
-        OAuthCacheKey cacheKey = new OAuthCacheKey(accessTokenIdentifier);
+        return lookupAccessToken(accessToken, false);
+    }
+
+    public static AccessTokenDO lookupAccessToken(String accessToken,
+                                                  boolean lookupExpiredTokens) throws IdentityOAuth2Exception {
+
+        // For token types such a JWT access tokens we do not store the original access token in the DB/cache. We store
+        // an alias of the original token (eg: jti claim of the JWT) instead. Therefore when we do the lookup we need to
+        // derive the alias and then do the lookup. For normal UUID tokens the alias is the original token itself.
+        String accessTokenIdentifierForLookup = getPersistedTokenIdentifier(accessToken);
+
+        AccessTokenDO accessTokenDO;
+        OAuthCacheKey cacheKey = new OAuthCacheKey(accessTokenIdentifierForLookup);
         CacheEntry result = OAuthCache.getInstance().getValueFromCache(cacheKey);
         // cache hit, do the type check.
-        if (result != null && result instanceof AccessTokenDO) {
-            accessTokenDO = (AccessTokenDO) result;
-            cacheHit = true;
+        if (result instanceof AccessTokenDO) {
+            return (AccessTokenDO) result;
         }
 
         // cache miss, load the access token info from the database.
-        if (accessTokenDO == null) {
-            accessTokenDO = OAuthTokenPersistenceFactory.getInstance().getAccessTokenDAO()
-                    .getAccessToken(accessTokenIdentifier, false);
-        }
+        accessTokenDO = OAuthTokenPersistenceFactory.getInstance().getAccessTokenDAO()
+                .getAccessToken(accessTokenIdentifierForLookup, lookupExpiredTokens);
 
         if (accessTokenDO == null) {
-            // this means the token is not active so we can't proceed further
-            throw new IllegalArgumentException("Invalid Access Token. Access token is not ACTIVE.");
+            if (!lookupExpiredTokens) {
+                // If the lookup is only for tokens in 'ACTIVE' state, APIs calling this method expect an
+                // IllegalArgumentException to be thrown to identify inactive/invalid tokens.
+                throw new IllegalArgumentException("Invalid Access Token. Access token is not ACTIVE.");
+            }
         }
 
         // add the token back to the cache in the case of a cache miss
-        if (!cacheHit) {
-            cacheKey = new OAuthCacheKey(accessTokenIdentifier);
+        if (accessTokenDO != null) {
             OAuthCache.getInstance().addToCache(cacheKey, accessTokenDO);
             if (log.isDebugEnabled()) {
                 log.debug("Access Token Info object was added back to the cache.");
@@ -1303,6 +1311,15 @@ public class OAuth2Util {
         }
 
         return accessTokenDO;
+    }
+
+    public static void addToCacheWithAccessTokenAsKey(AccessTokenDO accessTokenDO) throws IdentityOAuth2Exception {
+
+        // For token types such a JWT access tokens we do not store the original access token in the DB/cache. We store
+        // an alias of the original token (eg: jti claim of the JWT) instead. Therefore when adding to the cache we need
+        // to derive the alias of the token as the key and add to the cache.
+        String persistedTokenIdentifier = getPersistedTokenIdentifier(accessTokenDO.getAccessToken());
+        OAuthCache.getInstance().addToCache(new OAuthCacheKey(persistedTokenIdentifier), accessTokenDO);
     }
 
 
@@ -2553,6 +2570,27 @@ public class OAuth2Util {
         }
 
         return authenticatedUser;
+    }
+
+    public static String getPersistedTokenIdentifier(String accessToken) throws IdentityOAuth2Exception {
+
+        try {
+            if (OAuthServerConfiguration.getInstance().usePersistedAccessTokenAlias()) {
+                OauthTokenIssuer tokenIssuer = OAuthServerConfiguration.getInstance().getIdentityOauthTokenIssuer();
+                return tokenIssuer.getAccessTokenHash(accessToken);
+            } else {
+                return accessToken;
+            }
+        } catch (OAuthSystemException e) {
+            if (log.isDebugEnabled()) {
+                if (IdentityUtil.isTokenLoggable(IdentityConstants.IdentityTokens.ACCESS_TOKEN)) {
+                    log.debug("Error while getting access token hash from token: " + accessToken, e);
+                } else {
+                    log.debug("Error while getting access token hash.", e);
+                }
+            }
+            throw new IdentityOAuth2Exception("Error while getting access token hash.", e);
+        }
     }
 }
 

@@ -285,8 +285,10 @@ public class RefreshGrantHandler extends AbstractAuthorizationGrantHandler {
         updateCacheIfEnabled(tokReqMsgCtx, accessTokenBean, clientId, oldAccessToken);
     }
 
-    private void updateCacheIfEnabled(OAuthTokenReqMessageContext tokReqMsgCtx, AccessTokenDO accessTokenBean,
-                                      String clientId, RefreshTokenValidationDataDO oldAccessToken) {
+    private void updateCacheIfEnabled(OAuthTokenReqMessageContext tokReqMsgCtx,
+                                      AccessTokenDO accessTokenBean,
+                                      String clientId,
+                                      RefreshTokenValidationDataDO oldAccessToken) throws IdentityOAuth2Exception {
         if (cacheEnabled) {
             // Remove old access token from the OAuthCache
             String scope = OAuth2Util.buildScopeString(tokReqMsgCtx.getScope());
@@ -303,8 +305,7 @@ public class RefreshGrantHandler extends AbstractAuthorizationGrantHandler {
             OAuthCache.getInstance().addToCache(oauthCacheKey, accessTokenBean);
 
             // Add new access token to the AccessTokenCache
-            accessTokenCacheKey = new OAuthCacheKey(accessTokenBean.getAccessToken());
-            OAuthCache.getInstance().addToCache(accessTokenCacheKey, accessTokenBean);
+            OAuth2Util.addToCacheWithAccessTokenAsKey(accessTokenBean);
 
             if (log.isDebugEnabled()) {
                 log.debug("Access Token info for the refresh token was added to the cache for " +

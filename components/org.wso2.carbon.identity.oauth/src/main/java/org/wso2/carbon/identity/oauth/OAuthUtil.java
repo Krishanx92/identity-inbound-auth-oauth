@@ -28,6 +28,8 @@ import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.oauth.cache.OAuthCache;
 import org.wso2.carbon.identity.oauth.cache.OAuthCacheKey;
+import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
+import org.wso2.carbon.identity.oauth2.util.OAuth2Util;
 import org.wso2.carbon.registry.core.utils.UUIDGenerator;
 import org.wso2.carbon.user.core.util.UserCoreUtil;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
@@ -104,6 +106,15 @@ public final class OAuthUtil {
 
         OAuthCacheKey cacheKey = new OAuthCacheKey(oauthCacheKey);
         OAuthCache.getInstance().clearCacheEntry(cacheKey);
+    }
+
+    public static void clearOAuthCacheByAccessToken(String accessToken) throws IdentityOAuth2Exception {
+
+        // For token types such a JWT access tokens we do not store the original access token in the DB/cache. We store
+        // an alias of the original token (eg: jti claim of the JWT) instead. Therefore when clearing the cache we need
+        // to derive the alias and clear the cache. For normal UUID tokens the alias is the original token itself.
+        String persistedTokenIdentifier = OAuth2Util.getPersistedTokenIdentifier(accessToken);
+        clearOAuthCache(persistedTokenIdentifier);
     }
 
     public static AuthenticatedUser getAuthenticatedUser(String fullyQualifiedUserName) {
