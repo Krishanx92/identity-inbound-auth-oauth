@@ -113,7 +113,7 @@ public final class OAuthUtil {
         // For token types such a JWT access tokens we do not store the original access token in the DB/cache. We store
         // an alias of the original token (eg: jti claim of the JWT) instead. Therefore when clearing the cache we need
         // to derive the alias and clear the cache. For normal UUID tokens the alias is the original token itself.
-        String persistedTokenIdentifier = OAuth2Util.getPersistedTokenIdentifier(accessToken);
+        String persistedTokenIdentifier = OAuth2Util.getAccessTokenIdentifier(accessToken);
         clearOAuthCache(persistedTokenIdentifier);
     }
 

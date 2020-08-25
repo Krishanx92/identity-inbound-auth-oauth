@@ -355,7 +355,7 @@ public class OAuth2Service extends AbstractAdmin {
                     OAuthUtil.clearOAuthCache(revokeRequestDTO.getConsumerKey(), refreshTokenDO.getAuthorizedUser());
                     OAuthUtil.clearOAuthCacheByAccessToken(accessToken);
 
-                    String persistedAccessTokenIdentifier = OAuth2Util.getPersistedTokenIdentifier(accessToken);
+                    String persistedAccessTokenIdentifier = OAuth2Util.getAccessTokenIdentifier(accessToken);
                     OAuthTokenPersistenceFactory.getInstance().getAccessTokenDAO()
                             .revokeAccessTokens(new String[]{persistedAccessTokenIdentifier});
 
@@ -373,7 +373,7 @@ public class OAuth2Service extends AbstractAdmin {
 
                         synchronized ((revokeRequestDTO.getConsumerKey() + ":" + authorizedUser + ":" + scope).intern()) {
                             String accessToken = revokeRequestDTO.getToken();
-                            String persistedAccessTokenIdentifier = OAuth2Util.getPersistedTokenIdentifier(accessToken);
+                            String persistedAccessTokenIdentifier = OAuth2Util.getAccessTokenIdentifier(accessToken);
                             OAuthTokenPersistenceFactory.getInstance().getAccessTokenDAO()
                                     .revokeAccessTokens(new String[]{persistedAccessTokenIdentifier});
                         }
