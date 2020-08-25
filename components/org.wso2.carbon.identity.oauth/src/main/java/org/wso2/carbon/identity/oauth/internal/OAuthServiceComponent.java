@@ -58,6 +58,7 @@ public class OAuthServiceComponent {
             listener = new IdentityOathEventListener();
             serviceRegistration = context.getBundleContext().registerService(UserOperationEventListener.class.getName(),
                     listener, null);
+            oauthServerConfig.populateOAuthTokenIssuerMap();
             log.debug("Identity Oath Event Listener is enabled");
 
             if (log.isDebugEnabled()) {

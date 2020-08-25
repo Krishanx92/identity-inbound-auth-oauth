@@ -46,6 +46,7 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1268,34 +1269,38 @@ public class OAuth2Util {
         return new ArrayList<>();
     }
 
-    public static AccessTokenDO getAccessTokenDOfromTokenIdentifier(String accessTokenIdentifier) throws
-            IdentityOAuth2Exception {
-        boolean cacheHit = false;
-        AccessTokenDO accessTokenDO = null;
+    public static AccessTokenDO getAccessTokenDOfromTokenIdentifier(String accessToken) throws IdentityOAuth2Exception {
 
-        // check the cache, if caching is enabled.
-        OAuthCacheKey cacheKey = new OAuthCacheKey(accessTokenIdentifier);
+        String accessTokenIdentifierForLookup = getAccessTokenIdentifier(accessToken);
+        return getAccessTokenDOfromTokenIdentifier(accessTokenIdentifierForLookup, false);
+    }
+
+    public static AccessTokenDO getAccessTokenDOfromTokenIdentifier(String accessTokenIdentifierForLookup,
+                                                                    boolean lookupExpiredTokens)
+            throws IdentityOAuth2Exception {
+
+        AccessTokenDO accessTokenDO;
+        OAuthCacheKey cacheKey = new OAuthCacheKey(accessTokenIdentifierForLookup);
         CacheEntry result = OAuthCache.getInstance().getValueFromCache(cacheKey);
         // cache hit, do the type check.
-        if (result != null && result instanceof AccessTokenDO) {
-            accessTokenDO = (AccessTokenDO) result;
-            cacheHit = true;
+        if (result instanceof AccessTokenDO) {
+            return (AccessTokenDO) result;
         }
 
         // cache miss, load the access token info from the database.
-        if (accessTokenDO == null) {
-            accessTokenDO = OAuthTokenPersistenceFactory.getInstance().getAccessTokenDAO()
-                    .getAccessToken(accessTokenIdentifier, false);
-        }
+        accessTokenDO = OAuthTokenPersistenceFactory.getInstance().getAccessTokenDAO()
+                .getAccessToken(accessTokenIdentifierForLookup, lookupExpiredTokens);
 
         if (accessTokenDO == null) {
-            // this means the token is not active so we can't proceed further
-            throw new IllegalArgumentException("Invalid Access Token. Access token is not ACTIVE.");
+            if (!lookupExpiredTokens) {
+                // If the lookup is only for tokens in 'ACTIVE' state, APIs calling this method expect an
+                // IllegalArgumentException to be thrown to identify inactive/invalid tokens.
+                throw new IllegalArgumentException("Invalid Access Token. Access token is not ACTIVE.");
+            }
         }
 
         // add the token back to the cache in the case of a cache miss
-        if (!cacheHit) {
-            cacheKey = new OAuthCacheKey(accessTokenIdentifier);
+        if (accessTokenDO != null) {
             OAuthCache.getInstance().addToCache(cacheKey, accessTokenDO);
             if (log.isDebugEnabled()) {
                 log.debug("Access Token Info object was added back to the cache.");
@@ -1303,6 +1308,25 @@ public class OAuth2Util {
         }
 
         return accessTokenDO;
+    }
+
+    public static AccessTokenDO lookupAccessToken(String accessToken, boolean lookupExpiredTokens)
+            throws IdentityOAuth2Exception {
+
+        // For token types such a JWT access tokens we do not store the original access token in the DB/cache. We store
+        // an alias of the original token (eg: jti claim of the JWT) instead. Therefore when we do the lookup we need to
+        // derive the alias and then do the lookup. For normal UUID tokens the alias is the original token itself.
+        String accessTokenIdentifierForLookup =  getAccessTokenIdentifier(accessToken);
+        return getAccessTokenDOfromTokenIdentifier(accessTokenIdentifierForLookup, lookupExpiredTokens);
+    }
+
+    public static void addToCacheWithAccessTokenAsKey(AccessTokenDO accessTokenDO) throws IdentityOAuth2Exception {
+
+        // For token types such a JWT access tokens we do not store the original access token in the DB/cache. We store
+        // an alias of the original token (eg: jti claim of the JWT) instead. Therefore when adding to the cache we need
+        // to derive the alias of the token as the key and add to the cache.
+        String persistedTokenIdentifier = getAccessTokenIdentifier(accessTokenDO.getAccessToken());
+        OAuthCache.getInstance().addToCache(new OAuthCacheKey(persistedTokenIdentifier), accessTokenDO);
     }
 
 
@@ -2553,6 +2577,139 @@ public class OAuth2Util {
         }
 
         return authenticatedUser;
+    }
+
+    /**
+     * Return access token identifier from OAuth2TokenValidationResponseDTO. This method validated the token against
+     * the cache and the DB.
+     *
+     * @param accessToken Access token string.
+     * @return extracted access token identifier.
+     * @throws IdentityOAuth2Exception
+     */
+    public static String getAccessTokenIdentifier(String accessToken) throws IdentityOAuth2Exception {
+
+        if (accessToken != null) {
+            AccessTokenDO accessTokenDO = findAccessToken(accessToken, false);
+            if (accessTokenDO != null) {
+                return accessTokenDO.getAccessToken();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Find access tokenDO from token identifier by chaining through all available token issuers.
+     *
+     * @param tokenIdentifier access token data object from the validation request.
+     * @return AccessTokenDO
+     * @throws IdentityOAuth2Exception
+     */
+    public static AccessTokenDO findAccessToken(String tokenIdentifier, boolean includeExpired)
+            throws IdentityOAuth2Exception {
+
+        AccessTokenDO accessTokenDO;
+
+        // Get a copy of the list of token issuers .
+        Map<String, OauthTokenIssuer> allOAuthTokenIssuerMap = new HashMap<>(OAuthServerConfiguration.getInstance()
+                .getOauthTokenIssuerMap());
+
+        // Differentiate default token issuers and other issuers for better performance.
+        Map<String, OauthTokenIssuer> defaultOAuthTokenIssuerMap = new HashMap<>();
+        extractDefaultOauthTokenIssuers(allOAuthTokenIssuerMap, defaultOAuthTokenIssuerMap);
+
+        // First try default token issuers.
+        accessTokenDO = getAccessTokenDOFromMatchingTokenIssuer(tokenIdentifier, defaultOAuthTokenIssuerMap,
+                includeExpired);
+        if (accessTokenDO != null) {
+            return accessTokenDO;
+        }
+
+        // Loop through other issuer and try to get the hash.
+        accessTokenDO = getAccessTokenDOFromMatchingTokenIssuer(tokenIdentifier, allOAuthTokenIssuerMap,
+                includeExpired);
+
+        // If the lookup is only for tokens in 'ACTIVE' state, APIs calling this method expect an
+        // IllegalArgumentException to be thrown to identify inactive/invalid tokens.
+        if (accessTokenDO == null && !includeExpired) {
+            throw new IllegalArgumentException("Invalid Access Token. ACTIVE access token is not found.");
+        }
+
+        return accessTokenDO;
+    }
+
+
+    /**
+     * Differentiate default token issuers from all available token issuers map.
+     *
+     * @param allOAuthTokenIssuerMap Map of all available token issuers.
+     * @param
+     */
+    private static void extractDefaultOauthTokenIssuers( Map<String, OauthTokenIssuer> allOAuthTokenIssuerMap,
+                                                         Map<String, OauthTokenIssuer> defaultOAuthTokenIssuerMap) {
+
+        // TODO: 4/9/19 Implement logic to read default issuer from config.
+        // TODO: 4/9/19 add sorting mechanism to use JWT issuer first.
+        defaultOAuthTokenIssuerMap.put(OAuthServerConfiguration.JWT_TOKEN_TYPE,
+                allOAuthTokenIssuerMap.get(OAuthServerConfiguration.JWT_TOKEN_TYPE));
+        allOAuthTokenIssuerMap.remove(OAuthServerConfiguration.JWT_TOKEN_TYPE);
+
+        defaultOAuthTokenIssuerMap.put(OAuthServerConfiguration.DEFAULT_TOKEN_TYPE,
+                allOAuthTokenIssuerMap.get(OAuthServerConfiguration.DEFAULT_TOKEN_TYPE));
+        allOAuthTokenIssuerMap.remove(OAuthServerConfiguration.DEFAULT_TOKEN_TYPE);
+    }
+
+    /**
+     * Loop through provided token issuer list and tries to get the access token DO.
+     *
+     * @param tokenIdentifier Provided token identifier.
+     * @param tokenIssuerMap  List of token issuers.
+     * @return Obtained matching access token DO if possible.
+     * @throws IdentityOAuth2Exception
+     */
+    private static AccessTokenDO getAccessTokenDOFromMatchingTokenIssuer(String tokenIdentifier,
+                                                                         Map<String, OauthTokenIssuer> tokenIssuerMap,
+                                                                         boolean includeExpired)
+            throws IdentityOAuth2Exception {
+
+        AccessTokenDO accessTokenDO;
+        if (tokenIssuerMap != null) {
+            for (Map.Entry<String, OauthTokenIssuer> oauthTokenIssuerEntry : tokenIssuerMap.entrySet()) {
+                try {
+                    OauthTokenIssuer oauthTokenIssuer = oauthTokenIssuerEntry.getValue();
+                    String tokenAlias = oauthTokenIssuer.getAccessTokenHash(tokenIdentifier);
+                    if (oauthTokenIssuer.usePersistedAccessTokenAlias()) {
+                        accessTokenDO = getAccessTokenDOfromTokenIdentifier(tokenAlias, includeExpired);
+                    } else {
+                        accessTokenDO = getAccessTokenDOfromTokenIdentifier(tokenIdentifier, includeExpired);
+                    }
+                    if (accessTokenDO != null) {
+                        return accessTokenDO;
+                    }
+                } catch (OAuthSystemException e) {
+                    if (log.isDebugEnabled()) {
+                        if (IdentityUtil.isTokenLoggable(IdentityConstants.IdentityTokens.ACCESS_TOKEN)) {
+                            log.debug("Token issuer: " + oauthTokenIssuerEntry.getKey() + " was tried and" +
+                                    " failed to parse the received token: " + tokenIdentifier);
+                        } else {
+                            log.debug("Token issuer: " + oauthTokenIssuerEntry.getKey() + " was tried and" +
+                                    " failed to parse the received token.");
+                        }
+                    }
+                } catch (IllegalArgumentException e) {
+                    if (log.isDebugEnabled()) {
+                        if (IdentityUtil.isTokenLoggable(IdentityConstants.IdentityTokens.ACCESS_TOKEN)) {
+                            log.debug("Token issuer: " + oauthTokenIssuerEntry.getKey() + " was tried and"
+                                    + " failed to get the token from database: " + tokenIdentifier);
+                        } else {
+                            log.debug("Token issuer: " + oauthTokenIssuerEntry.getKey() + " was tried and"
+                                    + " failed  to get the token from database.");
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
 
