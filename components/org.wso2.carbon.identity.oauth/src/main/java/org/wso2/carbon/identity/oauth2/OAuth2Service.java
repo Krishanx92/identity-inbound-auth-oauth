@@ -347,21 +347,19 @@ public class OAuth2Service extends AbstractAdmin {
                 }
 
                 if (refreshTokenDO != null) {
-
+                    // If the access token is a a JWT, DO will return the hash. Or else if it is the normal opaque
+                    // token, it will return the same. So we don't need token ID conversions here.
                     String accessToken = refreshTokenDO.getAccessToken();
 
                     OAuthUtil.clearOAuthCache(revokeRequestDTO.getConsumerKey(), refreshTokenDO.getAuthorizedUser(),
                             OAuth2Util.buildScopeString(refreshTokenDO.getScope()));
                     OAuthUtil.clearOAuthCache(revokeRequestDTO.getConsumerKey(), refreshTokenDO.getAuthorizedUser());
-                    OAuthUtil.clearOAuthCacheByAccessToken(accessToken);
+                    OAuthUtil.clearOAuthCache(accessToken);
 
-                    String persistedAccessTokenIdentifier = OAuth2Util.getAccessTokenIdentifier(accessToken);
                     OAuthTokenPersistenceFactory.getInstance().getAccessTokenDAO()
-                            .revokeAccessTokens(new String[]{persistedAccessTokenIdentifier});
-
+                            .revokeAccessTokens(new String[]{accessToken});
                     addRevokeResponseHeaders(revokeResponseDTO, accessToken, revokeRequestDTO.getToken(),
                             refreshTokenDO.getAuthorizedUser().toString());
-
                 } else if (accessTokenDO != null) {
                     if (revokeRequestDTO.getConsumerKey().equals(accessTokenDO.getConsumerKey())) {
                         OAuthUtil.clearOAuthCache(revokeRequestDTO.getConsumerKey(), accessTokenDO.getAuthzUser(),

@@ -20,14 +20,24 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.application.common.IdentityApplicationManagementException;
+import org.wso2.carbon.identity.application.common.model.LocalAndOutboundAuthenticationConfig;
+import org.wso2.carbon.identity.application.common.model.ServiceProvider;
+import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.common.testng.WithCarbonHome;
 import org.wso2.carbon.identity.common.testng.WithH2Database;
 import org.wso2.carbon.identity.common.testng.WithRealmService;
+import org.wso2.carbon.identity.oauth.config.OAuthServerConfiguration;
 import org.wso2.carbon.identity.oauth.internal.OAuthComponentServiceHolder;
 import org.wso2.carbon.identity.oauth2.TestConstants;
 import org.wso2.carbon.identity.oauth2.dto.OAuth2AuthorizeReqDTO;
 import org.wso2.carbon.identity.oauth2.dto.OAuth2AuthorizeRespDTO;
+import org.wso2.carbon.identity.oauth2.internal.OAuth2ServiceComponentHolder;
 import org.wso2.carbon.identity.testutil.IdentityBaseTest;
+
+import static org.mockito.Matchers.anyString;
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 @WithCarbonHome
 @WithH2Database(files = {"dbScripts/h2_with_application_and_token.sql"})
@@ -40,6 +50,8 @@ public class AuthorizationHandlerManagerTest extends IdentityBaseTest {
 
     @BeforeClass
     public void setUp() throws Exception {
+        OAuthServerConfiguration oauthServerConfig = OAuthServerConfiguration.getInstance();
+        oauthServerConfig.populateOAuthTokenIssuerMap();
         authorizationHandlerManager = AuthorizationHandlerManager.getInstance();
     }
 
@@ -79,6 +91,8 @@ public class AuthorizationHandlerManagerTest extends IdentityBaseTest {
 
     @Test
     public void testHandleAuthorizationIDTokenResponse() throws Exception {
+
+        mockServiceProvider();
         authorizationHandlerManager = AuthorizationHandlerManager.getInstance();
         authzReqDTO.setResponseType(TestConstants.AUTHORIZATION_HANDLER_RESPONSE_TYPE_ID_TOKEN);
         authzReqDTO.setConsumerKey(TestConstants.CLIENT_ID);
@@ -193,6 +207,8 @@ public class AuthorizationHandlerManagerTest extends IdentityBaseTest {
 
     @Test
     public void testHandleAuthorizationTokenResponseNoScopes() throws Exception {
+
+        mockServiceProvider();
         authorizationHandlerManager = AuthorizationHandlerManager.getInstance();
         authzReqDTO.setResponseType(TestConstants.AUTHORIZATION_HANDLER_RESPONSE_TYPE_TOKEN);
         authzReqDTO.setConsumerKey(TestConstants.CLIENT_ID);
@@ -245,6 +261,20 @@ public class AuthorizationHandlerManagerTest extends IdentityBaseTest {
         Assert.assertEquals(errorCode, OAuthError.CodeResponse.INVALID_SCOPE,
                             "Expected " + OAuthError.CodeResponse.INVALID_SCOPE + " error code but found : " +
                             errorCode);
+    }
+
+    private void mockServiceProvider() throws IdentityApplicationManagementException {
+
+        ServiceProvider serviceProvider = new ServiceProvider();
+        LocalAndOutboundAuthenticationConfig localAndOutboundAuthenticationConfig =
+                new LocalAndOutboundAuthenticationConfig();
+        localAndOutboundAuthenticationConfig.setUseTenantDomainInLocalSubjectIdentifier(false);
+        localAndOutboundAuthenticationConfig.setUseUserstoreDomainInLocalSubjectIdentifier(false);
+        serviceProvider.setLocalAndOutBoundAuthenticationConfig(localAndOutboundAuthenticationConfig);
+        ApplicationManagementService appMgtService = mock(ApplicationManagementService.class);
+        when(appMgtService.getServiceProviderByClientId(anyString(), anyString(), anyString()))
+                .thenReturn(serviceProvider);
+        OAuth2ServiceComponentHolder.setApplicationMgtService(appMgtService);
     }
 
 }

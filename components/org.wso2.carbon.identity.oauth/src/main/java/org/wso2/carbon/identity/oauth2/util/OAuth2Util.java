@@ -1271,7 +1271,8 @@ public class OAuth2Util {
 
     public static AccessTokenDO getAccessTokenDOfromTokenIdentifier(String accessToken) throws IdentityOAuth2Exception {
 
-        return getAccessTokenDOfromTokenIdentifier(accessToken, false);
+        String accessTokenIdentifierForLookup = getAccessTokenIdentifier(accessToken);
+        return getAccessTokenDOfromTokenIdentifier(accessTokenIdentifierForLookup, false);
     }
 
     public static AccessTokenDO getAccessTokenDOfromTokenIdentifier(String accessTokenIdentifierForLookup,
@@ -1316,8 +1317,7 @@ public class OAuth2Util {
         // an alias of the original token (eg: jti claim of the JWT) instead. Therefore when we do the lookup we need to
         // derive the alias and then do the lookup. For normal UUID tokens the alias is the original token itself.
         String accessTokenIdentifierForLookup =  getAccessTokenIdentifier(accessToken);
-        AccessTokenDO accessTokenDO = getAccessTokenDOfromTokenIdentifier(accessTokenIdentifierForLookup);
-        return accessTokenDO;
+        return getAccessTokenDOfromTokenIdentifier(accessTokenIdentifierForLookup, lookupExpiredTokens);
     }
 
     public static void addToCacheWithAccessTokenAsKey(AccessTokenDO accessTokenDO) throws IdentityOAuth2Exception {
@@ -2579,27 +2579,6 @@ public class OAuth2Util {
         return authenticatedUser;
     }
 
-//    public static String getPersistedTokenIdentifier(String accessToken) throws IdentityOAuth2Exception {
-//
-//        try {
-//            if (OAuthServerConfiguration.getInstance().usePersistedAccessTokenAlias()) {
-//                OauthTokenIssuer tokenIssuer = OAuthServerConfiguration.getInstance().getIdentityOauthTokenIssuer();
-//                return tokenIssuer.getAccessTokenHash(accessToken);
-//            } else {
-//                return accessToken;
-//            }
-//        } catch (OAuthSystemException e) {
-//            if (log.isDebugEnabled()) {
-//                if (IdentityUtil.isTokenLoggable(IdentityConstants.IdentityTokens.ACCESS_TOKEN)) {
-//                    log.debug("Error while getting access token hash from token: " + accessToken, e);
-//                } else {
-//                    log.debug("Error while getting access token hash.", e);
-//                }
-//            }
-//            throw new IdentityOAuth2Exception("Error while getting access token hash.", e);
-//        }
-//    }
-
     /**
      * Return access token identifier from OAuth2TokenValidationResponseDTO. This method validated the token against
      * the cache and the DB.
@@ -2611,8 +2590,7 @@ public class OAuth2Util {
     public static String getAccessTokenIdentifier(String accessToken) throws IdentityOAuth2Exception {
 
         if (accessToken != null) {
-            AccessTokenDO accessTokenDO = null;
-            accessTokenDO = findAccessToken(accessToken, false);
+            AccessTokenDO accessTokenDO = findAccessToken(accessToken, false);
             if (accessTokenDO != null) {
                 return accessTokenDO.getAccessToken();
             }
