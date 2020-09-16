@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.base.IdentityConstants;
 import org.wso2.carbon.identity.base.IdentityException;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.oauth.OAuthUtil;
 import org.wso2.carbon.identity.oauth.cache.OAuthCache;
 import org.wso2.carbon.identity.oauth.cache.OAuthCacheKey;
 import org.wso2.carbon.identity.oauth.common.OAuthConstants;
@@ -283,7 +284,7 @@ public class AuthorizationCodeGrantHandler extends AbstractAuthorizationGrantHan
 
     private String buildCacheKeyForToken(String clientId, AuthzCodeDO authzCodeDO) {
         String scope = OAuth2Util.buildScopeString(authzCodeDO.getScope());
-        String authorizedUser = authzCodeDO.getAuthorizedUser().toString();
+        String authorizedUser = OAuthUtil.getFullyQualifiedUserName(authzCodeDO.getAuthorizedUser());
         return buildCacheKeyStringForToken(clientId, scope, authorizedUser);
     }
 

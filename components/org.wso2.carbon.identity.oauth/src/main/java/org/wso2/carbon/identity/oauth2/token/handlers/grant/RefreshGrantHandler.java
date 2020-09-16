@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.wso2.carbon.identity.base.IdentityConstants;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.oauth.OAuthUtil;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCache;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCacheEntry;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCacheKey;
@@ -201,7 +202,7 @@ public class RefreshGrantHandler extends AbstractAuthorizationGrantHandler {
 
     private void removeIfCached(OAuth2AccessTokenReqDTO tokenReq, RefreshTokenValidationDataDO validationBean) {
         if (cacheEnabled) {
-            clearCache(tokenReq.getClientId(), validationBean.getAuthorizedUser().toString(),
+            clearCache(tokenReq.getClientId(), OAuthUtil.getFullyQualifiedUserName(validationBean.getAuthorizedUser()),
                     validationBean.getScope(), validationBean.getAccessToken());
         }
     }
@@ -292,7 +293,7 @@ public class RefreshGrantHandler extends AbstractAuthorizationGrantHandler {
         if (cacheEnabled) {
             // Remove old access token from the OAuthCache
             String scope = OAuth2Util.buildScopeString(tokReqMsgCtx.getScope());
-            String authorizedUser = tokReqMsgCtx.getAuthorizedUser().toString();
+            String authorizedUser = OAuthUtil.getFullyQualifiedUserName(tokReqMsgCtx.getAuthorizedUser());
             String cacheKeyString  = OAuth2Util.buildCacheKeyStringForToken(clientId, scope, authorizedUser);
             OAuthCacheKey oauthCacheKey = new OAuthCacheKey(cacheKeyString);
             OAuthCache.getInstance().clearCacheEntry(oauthCacheKey);
