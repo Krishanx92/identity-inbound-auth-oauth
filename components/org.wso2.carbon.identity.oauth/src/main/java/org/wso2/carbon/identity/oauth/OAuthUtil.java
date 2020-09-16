@@ -28,6 +28,7 @@ import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.oauth.cache.OAuthCache;
 import org.wso2.carbon.identity.oauth.cache.OAuthCacheKey;
+import org.wso2.carbon.identity.oauth.config.OAuthServerConfiguration;
 import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.util.OAuth2Util;
 import org.wso2.carbon.registry.core.utils.UUIDGenerator;
@@ -74,16 +75,12 @@ public final class OAuthUtil {
 
     public static void clearOAuthCache(String consumerKey, User authorizedUser) {
 
-        String user = UserCoreUtil.addDomainToName(authorizedUser.getUserName(), authorizedUser.getUserStoreDomain());
-        user = UserCoreUtil.addTenantDomainToEntry(user, authorizedUser.getTenantDomain());
-        clearOAuthCache(consumerKey, user);
+        clearOAuthCache(consumerKey, getFullyQualifiedUserName(authorizedUser));
     }
 
     public static void clearOAuthCache(String consumerKey, User authorizedUser, String scope) {
 
-        String user = UserCoreUtil.addDomainToName(authorizedUser.getUserName(), authorizedUser.getUserStoreDomain());
-        user = UserCoreUtil.addTenantDomainToEntry(user, authorizedUser.getTenantDomain());
-        clearOAuthCache(consumerKey, user, scope);
+        clearOAuthCache(consumerKey, getFullyQualifiedUserName(authorizedUser), scope);
     }
 
     public static void clearOAuthCache(String consumerKey, String authorizedUser) {
@@ -155,4 +152,36 @@ public final class OAuthUtil {
         }
     }
 
+    /**
+     * Get the fully qualified username of the user.
+     *
+     * @param user User object.
+     * @return Fully qualified username of the user.
+     */
+    public static String getFullyQualifiedUserName(User user) {
+
+        if (!OAuthServerConfiguration.getInstance().isMapFederatedUsersToLocal() && user instanceof AuthenticatedUser &&
+                ((AuthenticatedUser) user).isFederatedUser()) {
+            if (log.isDebugEnabled()) {
+                log.debug("User is federated and not mapped to local users. Hence adding 'FEDERATED' domain will be " +
+                        "added to to the full qualified username.");
+            }
+            AuthenticatedUser federatedUser = (AuthenticatedUser) user;
+            String authUser = federatedUser.getUserName();
+            if (StringUtils.isBlank(authUser)) {
+                // Username may be null for federated users.
+                authUser = federatedUser.getAuthenticatedSubjectIdentifier();
+            }
+            if (StringUtils.isNotBlank(authUser)) {
+                authUser = UserCoreUtil.addDomainToName(authUser, OAuth2Util.getFederatedUserDomain
+                        (federatedUser.getFederatedIdPName()));
+                if (StringUtils.isNotBlank(federatedUser.getTenantDomain())) {
+                    authUser = UserCoreUtil.addTenantDomainToEntry(authUser, federatedUser.getTenantDomain());
+                }
+            }
+            return authUser;
+        } else {
+            return user.toString();
+        }
+    }
 }

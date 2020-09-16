@@ -28,6 +28,7 @@ import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.base.IdentityConstants;
 import org.wso2.carbon.identity.base.IdentityException;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.oauth.OAuthUtil;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCache;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCacheEntry;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCacheKey;
@@ -85,7 +86,7 @@ public class TokenResponseTypeHandler extends AbstractResponseTypeHandler {
         respDTO.setCallbackURI(authorizationReqDTO.getCallbackUrl());
 
         String consumerKey = authorizationReqDTO.getConsumerKey();
-        String authorizedUser = authorizationReqDTO.getUser().toString();
+        String authorizedUser = OAuthUtil.getFullyQualifiedUserName(authorizationReqDTO.getUser());
         String oAuthCacheKeyString;
 
         String responseType = oauthAuthzMsgCtx.getAuthorizationReqDTO().getResponseType();

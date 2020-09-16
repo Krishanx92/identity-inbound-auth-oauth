@@ -28,6 +28,7 @@ import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.base.IdentityConstants;
 import org.wso2.carbon.identity.base.IdentityException;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.oauth.OAuthUtil;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCache;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCacheEntry;
 import org.wso2.carbon.identity.oauth.cache.AuthorizationGrantCacheKey;
@@ -384,7 +385,7 @@ public class ResponseTypeHandlerUtil {
         OAuth2AuthorizeReqDTO authorizationReqDTO = oauthAuthzMsgCtx.getAuthorizationReqDTO();
         String scope = OAuth2Util.buildScopeString(oauthAuthzMsgCtx.getApprovedScope());
         String consumerKey = authorizationReqDTO.getConsumerKey();
-        String authorizedUser = authorizationReqDTO.getUser().toString();
+        String authorizedUser = OAuthUtil.getFullyQualifiedUserName(authorizationReqDTO.getUser());
 
         if (cacheEnabled) {
             existingTokenBean = getExistingTokenFromCache(consumerKey, scope, authorizedUser);
@@ -449,7 +450,8 @@ public class ResponseTypeHandlerUtil {
             long expireTime = getAccessTokenExpiryTimeMillis(existingToken);
             if (TOKEN_STATE_ACTIVE.equals(existingToken.getTokenState()) && expireTime != 0 && cacheEnabled) {
                 // Active token retrieved from db, adding to cache if cacheEnabled
-                addTokenToCache(getOAuthCacheKey(consumerKey, scope, authorizedUser.toString()), existingToken);
+                addTokenToCache(getOAuthCacheKey(
+                        consumerKey, scope, OAuthUtil.getFullyQualifiedUserName(authorizedUser)), existingToken);
             }
         }
         return existingToken;
@@ -461,7 +463,7 @@ public class ResponseTypeHandlerUtil {
         OAuth2AuthorizeReqDTO authorizationReqDTO = oauthAuthzMsgCtx.getAuthorizationReqDTO();
         String scope = OAuth2Util.buildScopeString(oauthAuthzMsgCtx.getApprovedScope());
         String consumerKey = authorizationReqDTO.getConsumerKey();
-        String authorizedUser = authorizationReqDTO.getUser().toString();
+        String authorizedUser = OAuthUtil.getFullyQualifiedUserName(authorizationReqDTO.getUser());
 
         OAuthAppDO oAuthAppBean = getOAuthApp(consumerKey);
         Timestamp timestamp = new Timestamp(new Date().getTime());

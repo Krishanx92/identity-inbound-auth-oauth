@@ -29,6 +29,7 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.base.IdentityConstants;
 import org.wso2.carbon.identity.base.IdentityException;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.oauth.OAuthUtil;
 import org.wso2.carbon.identity.oauth.cache.CacheEntry;
 import org.wso2.carbon.identity.oauth.cache.OAuthCache;
 import org.wso2.carbon.identity.oauth.cache.OAuthCacheKey;
@@ -110,7 +111,7 @@ public abstract class AbstractAuthorizationGrantHandler implements Authorization
     public OAuth2AccessTokenRespDTO issue(OAuthTokenReqMessageContext tokReqMsgCtx) throws IdentityOAuth2Exception {
         String scope = OAuth2Util.buildScopeString(tokReqMsgCtx.getScope());
         String consumerKey = tokReqMsgCtx.getOauth2AccessTokenReqDTO().getClientId();
-        String authorizedUser = tokReqMsgCtx.getAuthorizedUser().toString();
+        String authorizedUser = OAuthUtil.getFullyQualifiedUserName(tokReqMsgCtx.getAuthorizedUser());
         OauthTokenIssuer oauthTokenIssuer;
         try {
             oauthTokenIssuer = OAuth2Util.getOAuthTokenIssuerForOAuthApp(consumerKey);
@@ -438,7 +439,8 @@ public abstract class AbstractAuthorizationGrantHandler implements Authorization
 
     private void updateCacheIfEnabled(AccessTokenDO newTokenBean, String scope) {
         if (cacheEnabled) {
-            OAuthCacheKey cacheKey = getOAuthCacheKey(scope, newTokenBean.getConsumerKey(), newTokenBean.getAuthzUser().toString());
+            OAuthCacheKey cacheKey = getOAuthCacheKey(scope, newTokenBean.getConsumerKey(),
+                    OAuthUtil.getFullyQualifiedUserName(newTokenBean.getAuthzUser()));
             oauthCache.addToCache(cacheKey, newTokenBean);
             // Adding AccessTokenDO to improve validation performance
             OAuthCacheKey accessTokenCacheKey = new OAuthCacheKey(newTokenBean.getAccessToken());
