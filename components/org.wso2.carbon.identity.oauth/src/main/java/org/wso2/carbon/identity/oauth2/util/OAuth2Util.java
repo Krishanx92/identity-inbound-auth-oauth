@@ -35,6 +35,7 @@ import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.impl.builder.StAXOMBuilder;
@@ -2710,6 +2711,28 @@ public class OAuth2Util {
             }
         }
         return null;
+    }
+
+    /**
+     * Return true if the token identifier is a parsable JWT.
+     *
+     * @param tokenIdentifier String JWT token identifier.
+     * @return true for a JWT token.
+     */
+    public static boolean isParsableJWT(String tokenIdentifier) {
+
+        if (StringUtils.isBlank(tokenIdentifier)) {
+            return false;
+        }
+        try {
+            JWTParser.parse(tokenIdentifier);
+            return true;
+        } catch (ParseException e) {
+            if (log.isDebugEnabled()) {
+                log.debug("Provided token identifier is not a parsable JWT.", e);
+            }
+            return false;
+        }
     }
 }
 
