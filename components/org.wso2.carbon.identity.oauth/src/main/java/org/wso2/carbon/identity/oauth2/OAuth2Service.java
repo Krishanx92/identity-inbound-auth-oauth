@@ -301,14 +301,22 @@ public class OAuth2Service extends AbstractAdmin {
                                     .equals(refreshTokenDO.getRefreshTokenState()) ||
                                     OAuthConstants.TokenStates.TOKEN_STATE_EXPIRED
                                             .equals(refreshTokenDO.getRefreshTokenState()))) {
-
-                        accessTokenDO = OAuth2Util.lookupAccessToken(revokeRequestDTO.getToken(), true);
+                        try {
+                            accessTokenDO = OAuth2Util.lookupAccessToken(revokeRequestDTO.getToken(), true);
+                        } catch (IllegalArgumentException e) {
+                            log.debug("Invalid Access Token. ACTIVE access token is not found");
+                            accessTokenDO = null;
+                        }
                         refreshTokenDO = null;
                     }
 
                 } else {
-
-                    accessTokenDO = OAuth2Util.lookupAccessToken(revokeRequestDTO.getToken(), true);
+                    try {
+                        accessTokenDO = OAuth2Util.lookupAccessToken(revokeRequestDTO.getToken(), true);
+                    } catch (IllegalArgumentException e) {
+                        log.debug("Invalid Access Token. ACTIVE access token is not found");
+                        accessTokenDO = null;
+                    }
                     if (accessTokenDO == null) {
                         refreshTokenDO = OAuthTokenPersistenceFactory.getInstance()
                                 .getTokenManagementDAO().validateRefreshToken(revokeRequestDTO.getConsumerKey(),
@@ -371,9 +379,14 @@ public class OAuth2Service extends AbstractAdmin {
 
                         synchronized ((revokeRequestDTO.getConsumerKey() + ":" + authorizedUser + ":" + scope).intern()) {
                             String accessToken = revokeRequestDTO.getToken();
-                            String persistedAccessTokenIdentifier = OAuth2Util.getAccessTokenIdentifier(accessToken);
-                            OAuthTokenPersistenceFactory.getInstance().getAccessTokenDAO()
-                                    .revokeAccessTokens(new String[]{persistedAccessTokenIdentifier});
+                            try {
+                                String persistedAccessTokenIdentifier = OAuth2Util
+                                        .getAccessTokenIdentifier(accessToken);
+                                OAuthTokenPersistenceFactory.getInstance().getAccessTokenDAO()
+                                        .revokeAccessTokens(new String[]{persistedAccessTokenIdentifier});
+                            } catch (IllegalArgumentException e) {
+                                log.debug("Invalid Access Token. ACTIVE access token is not found");
+                            }
                         }
                         addRevokeResponseHeaders(revokeResponseDTO,
                                 revokeRequestDTO.getToken(),
