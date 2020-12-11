@@ -304,7 +304,9 @@ public class OAuth2Service extends AbstractAdmin {
                         try {
                             accessTokenDO = OAuth2Util.lookupAccessToken(revokeRequestDTO.getToken(), true);
                         } catch (IllegalArgumentException e) {
-                            log.debug("Invalid Access Token. ACTIVE access token is not found");
+                            if (log.isDebugEnabled()) {
+                                log.debug("Invalid Access Token. ACTIVE access token is not found");
+                            }
                             accessTokenDO = null;
                         }
                         refreshTokenDO = null;
@@ -314,7 +316,9 @@ public class OAuth2Service extends AbstractAdmin {
                     try {
                         accessTokenDO = OAuth2Util.lookupAccessToken(revokeRequestDTO.getToken(), true);
                     } catch (IllegalArgumentException e) {
-                        log.debug("Invalid Access Token. ACTIVE access token is not found");
+                        if (log.isDebugEnabled()) {
+                            log.debug("Invalid Access Token. ACTIVE access token is not found");
+                        }
                         accessTokenDO = null;
                     }
                     if (accessTokenDO == null) {
@@ -385,7 +389,9 @@ public class OAuth2Service extends AbstractAdmin {
                                 OAuthTokenPersistenceFactory.getInstance().getAccessTokenDAO()
                                         .revokeAccessTokens(new String[]{persistedAccessTokenIdentifier});
                             } catch (IllegalArgumentException e) {
-                                log.debug("Invalid Access Token. ACTIVE access token is not found");
+                                if (log.isDebugEnabled()) {
+                                    log.debug("Invalid Access Token. ACTIVE access token is not found");
+                                }
                             }
                         }
                         addRevokeResponseHeaders(revokeResponseDTO,
